@@ -37,39 +37,15 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
     #region Select Contact Category Checkbox
     protected void LoadContactCategoryCheckbox()
     {
-        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+        ContactBAL balContact = new ContactBAL();
 
-        try
+        DataTable dt = new DataTable();
+
+        dt = balContact.SelectForCheckBoxList(Convert.ToInt32(EncryptDecrypt.Base64Decode(Page.RouteData.Values["ContactID"].ToString())));
+
+        foreach (DataRow row in dt.Rows)
         {
-            if (objConn.State != ConnectionState.Open)
-                objConn.Open();
-
-            SqlCommand objCmd = new SqlCommand("PR_Contact_SelectItemsCheckboxListByUserID", objConn);
-
-            objCmd.CommandType = CommandType.StoredProcedure;
-
-            objCmd.Parameters.AddWithValue("@ContactID", EncryptDecrypt.Base64Decode(Page.RouteData.Values["ContactID"].ToString()));
-
-            SqlDataReader objSDR = objCmd.ExecuteReader();
-
-            if (objSDR.HasRows)
-            {
-                while (objSDR.Read())
-                {
-                    cblContactCategoryID.Items.FindByValue(objSDR["ContactCategoryID"].ToString()).Selected = true;
-                }
-            }
-
-            objConn.Close();
-        }
-        catch (SqlException ex)
-        {
-            lblMessage.Text = ex.Message;
-        }
-        finally
-        {
-            if (objConn.State == ConnectionState.Open)
-                objConn.Close();
+            cblContactCategoryID.Items.FindByValue(row["ContactCategoryID"].ToString()).Selected = true;
         }
     }
     #endregion
@@ -154,58 +130,68 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
             entContact.ContactID = ContactID;
 
-            balContact.Update(entContact);
-
-            foreach (ListItem li in cblContactCategoryID.Items)
+            if (balContact.Update(entContact))
             {
-                if (li.Selected)
-                {
-                    InsertContactCategory(ContactID, Convert.ToInt32(li.Value));
-                }
-                else
-                {
-                    DeleteContactCategory(ContactID, Convert.ToInt32(li.Value));
-                }
-            }
 
-            Response.Redirect("~/AddressBook/AdminPanel/Contact/Display");
+                foreach (ListItem li in cblContactCategoryID.Items)
+                {
+                    if (li.Selected)
+                    {
+                        InsertContactCategory(ContactID, Convert.ToInt32(li.Value));
+                    }
+                    else
+                    {
+                        DeleteContactCategory(ContactID, Convert.ToInt32(li.Value));
+                    }
+                }
+
+                Response.Redirect("~/AddressBook/AdminPanel/Contact/Display");
+            }
+            else
+                lblMessage.Text = balContact.Message;
+
         }
         else
         {
             if (Session["UserID"] != null)
                 entContact.UserID = Convert.ToInt32(Session["UserID"].ToString());
 
-            balContact.Insert(entContact);
-
-            foreach (ListItem li in cblContactCategoryID.Items)
+            if (balContact.Insert(entContact))
             {
-                if (li.Selected)
+
+                foreach (ListItem li in cblContactCategoryID.Items)
                 {
-                    InsertContactCategory(Convert.ToInt32(entContact.ContactID.ToString()), Convert.ToInt32(li.Value));
+                    if (li.Selected)
+                    {
+                        InsertContactCategory(Convert.ToInt32(entContact.ContactID.ToString()), Convert.ToInt32(li.Value));
+                    }
                 }
+
+                lblMessage.Text = "Data Inserted Successfully";
+
+                txtContactName.Text = "";
+                txtAddress.Text = "";
+                txtEmail.Text = "";
+                txtMobile.Text = "";
+                txtPincode.Text = "";
+
+                ddlCountryID.SelectedIndex = 0;
+
+                ddlStateID.Items.Clear();
+
+                ddlStateID.Items.Insert(0, new ListItem("Select State", "-1"));
+                ddlStateID.SelectedValue = "-1";
+
+                ddlCityID.Items.Clear();
+
+                ddlCityID.Items.Insert(0, new ListItem("Select City", "-1"));
+                ddlCityID.SelectedValue = "-1";
+
+                cblContactCategoryID.ClearSelection();
             }
+            else
+                lblMessage.Text = balContact.Message;
 
-            lblMessage.Text = "Data Inserted Successfully";
-
-            txtContactName.Text = "";
-            txtAddress.Text = "";
-            txtEmail.Text = "";
-            txtMobile.Text = "";
-            txtPincode.Text = "";
-
-            ddlCountryID.SelectedIndex = 0;
-
-            ddlStateID.Items.Clear();
-
-            ddlStateID.Items.Insert(0, new ListItem("Select State", "-1"));
-            ddlStateID.SelectedValue = "-1";
-
-            ddlCityID.Items.Clear();
-
-            ddlCityID.Items.Insert(0, new ListItem("Select City", "-1"));
-            ddlCityID.SelectedValue = "-1";
-
-            cblContactCategoryID.ClearSelection();
         }
     }
     #endregion
@@ -221,7 +207,10 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
         entContactWiseContactCategory.ContactCategoryID = ContactCategoryID;
 
-        balContactWiseContactCategory.Insert(entContactWiseContactCategory);
+        if(!balContactWiseContactCategory.Insert(entContactWiseContactCategory))
+        {
+            lblMessage.Text = balContactWiseContactCategory.Message;
+        }
     }
     #endregion
 
@@ -236,7 +225,8 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
         entContactWiseContactCategory.ContactCategoryID = ContactCategoryID;
 
-        balContactWiseContactCategory.Delete(ContactID, ContactCategoryID);
+        if(!balContactWiseContactCategory.Delete(ContactID, ContactCategoryID))
+            lblMessage.Text = balContactWiseContactCategory.Message;
     }
     #endregion
 
@@ -248,23 +238,33 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
         entContact = balContact.SelectByPK(Convert.ToInt32(EncryptDecrypt.Base64Decode(Page.RouteData.Values["ContactID"].ToString())));
 
-        txtContactName.Text = entContact.ContactName.ToString();
-        txtAddress.Text = entContact.Address.ToString();
-        txtEmail.Text = entContact.EmailAddress.ToString();
-        txtMobile.Text = entContact.MobileNo.ToString();
-        txtPincode.Text = entContact.Pincode.ToString();
-        ddlCountryID.SelectedValue = entContact.CountryID.ToString();
+        if (!entContact.ContactName.IsNull)
+            txtContactName.Text = entContact.ContactName.ToString();
+
+        if (!entContact.Address.IsNull)
+            txtAddress.Text = entContact.Address.ToString();
+
+        if (!entContact.EmailAddress.IsNull)
+            txtEmail.Text = entContact.EmailAddress.ToString();
+
+        if (!entContact.MobileNo.IsNull)
+            txtMobile.Text = entContact.MobileNo.ToString();
+
+        if (!entContact.Pincode.IsNull)
+            txtPincode.Text = entContact.Pincode.ToString();
+
+        if (!entContact.CountryID.IsNull)
+            ddlCountryID.SelectedValue = entContact.CountryID.ToString();
 
         CommonFillDropdown.FillStateDropdown(Convert.ToInt32(Session["UserID"]), ddlStateID, lblMessage, Convert.ToInt32((entContact.CountryID.ToString())));
 
-        ddlStateID.SelectedValue = entContact.StateID.ToString();
+        if(!entContact.StateID.IsNull)
+            ddlStateID.SelectedValue = entContact.StateID.ToString();
 
         CommonFillDropdown.FillCityDropdown(Convert.ToInt32(Session["UserID"]), ddlCityID, lblMessage, Convert.ToInt32((entContact.StateID.ToString())));
 
-        ddlCityID.SelectedValue = entContact.CityID.ToString();
-
-
-
+        if (!entContact.CityID.IsNull)
+            ddlCityID.SelectedValue = entContact.CityID.ToString();
     }
     #endregion
 

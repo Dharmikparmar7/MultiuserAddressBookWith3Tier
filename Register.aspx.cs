@@ -44,12 +44,14 @@ public partial class Register : System.Web.UI.Page
 
         UserMasterBAL balUserMaster = new UserMasterBAL();
 
-        balUserMaster.Insert(entUserMaster);
+        if (balUserMaster.Insert(entUserMaster))
+        {
+            fuImage.SaveAs(Server.MapPath(entUserMaster.PhotoPath.ToString()));
 
-        fuImage.SaveAs(Server.MapPath(entUserMaster.PhotoPath.ToString()));
-
-        Response.Redirect("~/AddressBook/AdminPanel/Login");
-
+            Response.Redirect("~/AddressBook/AdminPanel/Login");
+        }
+        else
+            lblMessage.Text = balUserMaster.Message;
     }
     #endregion
 }

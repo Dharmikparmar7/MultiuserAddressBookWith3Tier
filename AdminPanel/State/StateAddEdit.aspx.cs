@@ -37,9 +37,11 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
 
         entState = balState.SelectByPK(Convert.ToInt32(EncryptDecrypt.Base64Decode(Page.RouteData.Values["StateID"].ToString())));
 
-        txtStateName.Text = entState.StateName.ToString();
+        if (!entState.StateName.IsNull)
+            txtStateName.Text = entState.StateName.ToString();
 
-        ddlCountryID.SelectedValue = entState.CountryID.ToString();
+        if (!entState.CountryID.IsNull)
+            ddlCountryID.SelectedValue = entState.CountryID.ToString();
     }
     #endregion
 
@@ -77,30 +79,34 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
             entState.StateName = txtStateName.Text.Trim();
         }
         #endregion Gather Information
-        
+
         StateBAL balState = new StateBAL();
 
         if (Page.RouteData.Values["StateID"] != null)
         {
             entState.StateID = Convert.ToInt32(EncryptDecrypt.Base64Decode(Page.RouteData.Values["StateID"].ToString()));
 
-            balState.Update(entState);
+            if (balState.Update(entState))
+                Response.Redirect("~/AddressBook/AdminPanel/State/Display");
+            else
+                lblMessage.Text = balState.Message;
 
-            Response.Redirect("~/AddressBook/AdminPanel/State/Display");
         }
         else
         {
             entState.UserID = Convert.ToInt32(Session["UserID"].ToString());
 
-            balState.Insert(entState);
+            if (balState.Insert(entState))
+            {
+                lblMessage.Text = "Data Inserted Successfully";
 
-            lblMessage.Text = "Data Inserted Successfully";
+                txtStateName.Text = "";
 
-            txtStateName.Text = "";
-
-            ddlCountryID.SelectedIndex = 0;
+                ddlCountryID.SelectedIndex = 0;
+            }
+            else
+                lblMessage.Text = balState.Message;
         }
-
     }
     #endregion
 

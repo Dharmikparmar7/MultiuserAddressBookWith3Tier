@@ -18,15 +18,19 @@ public partial class AdminPanel_Contact_Category_ContactCategoryList : System.We
                 FillContactCategoryGridview();
         }
     }
-
+    
     #region Delete Contact Category
     protected void gvContactCategory_RowCommand(object sender, GridViewCommandEventArgs e)
     {
-        ContactCategoryBAL balContactCategory = new ContactCategoryBAL();
+        if (e.CommandName == "DeleteRecord" && e.CommandArgument != null)
+        {
+            ContactCategoryBAL balContactCategory = new ContactCategoryBAL();
 
-        balContactCategory.Delete(Convert.ToInt32(e.CommandArgument.ToString()));
-
-        FillContactCategoryGridview();
+            if(balContactCategory.Delete(Convert.ToInt32(e.CommandArgument.ToString())))
+                FillContactCategoryGridview();
+            else
+                lblMessage.Text = balContactCategory.Message;
+        }
     }
     #endregion
 
@@ -35,9 +39,17 @@ public partial class AdminPanel_Contact_Category_ContactCategoryList : System.We
     {
         ContactCategoryBAL balContactCategory = new ContactCategoryBAL();
 
-        gvContactCategory.DataSource = balContactCategory.SelectAll(Convert.ToInt32(Session["UserID"]));
+        DataTable dt = new DataTable();
+        
+        dt = balContactCategory.SelectAll(Convert.ToInt32(Session["UserID"]));
 
-        gvContactCategory.DataBind();
+        if (dt != null && dt.Rows.Count > 0)
+        {
+            gvContactCategory.DataSource = dt;
+
+            gvContactCategory.DataBind();
+        }
+
     }
     #endregion
 }

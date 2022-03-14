@@ -87,6 +87,14 @@ public class ContactBAL
     }
     #endregion
 
+    #region SelectForCheckBoxList
+    public DataTable SelectForCheckBoxList(SqlInt32 ContactID)
+    {
+        ContactDAL dalContact = new ContactDAL();
+        return dalContact.SelectForCheckBoxList(ContactID);
+    }
+    #endregion
+
     #region SelectByPK
     public ContactENT SelectByPK(SqlInt32 ContactID)
     {

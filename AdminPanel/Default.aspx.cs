@@ -22,23 +22,37 @@ public partial class AdminPanel_Default : System.Web.UI.Page
     #region Delete Contact
     protected void gvContact_RowCommand(object sender, GridViewCommandEventArgs e)
     {
-        ContactBAL balContact = new ContactBAL();
+        if (e.CommandName == "DeleteRecord" && e.CommandArgument != null)
+        {
+            ContactBAL balContact = new ContactBAL();
 
-        balContact.Delete(Convert.ToInt32(e.CommandArgument.ToString()));
+            balContact.Delete(Convert.ToInt32(e.CommandArgument.ToString()));
 
-        FillContactGridView();
+            FillContactGridView();
+        }
     }
     #endregion
 
     #region Fill Contact GridView
     private void FillContactGridView()
     {
+        DataTable dt = new DataTable();
+
         ContactBAL balContact = new ContactBAL();
 
-        gvContact.DataSource = balContact.SelectAll(Convert.ToInt32(Session["UserID"]));
+        dt = balContact.SelectAll(Convert.ToInt32(Session["UserID"]));
 
-        gvContact.DataBind();
+        if (dt != null && dt.Rows.Count > 0)
+        {
+            gvContact.DataSource = dt;
+
+            gvContact.DataBind();
+        }
 
     }
     #endregion
 }
+
+//Adiths
+//JarvisLite
+//Certificate

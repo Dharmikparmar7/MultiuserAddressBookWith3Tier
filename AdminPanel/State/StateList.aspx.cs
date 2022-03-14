@@ -26,9 +26,11 @@ public partial class AdminPanel_State_StateList : System.Web.UI.Page
     {
         StateBAL balState = new StateBAL();
 
-        balState.Delete(Convert.ToInt32(e.CommandArgument.ToString()));
+        if(balState.Delete(Convert.ToInt32(e.CommandArgument.ToString())))
+            FillStateGridView();
+        else
+            lblMessage.Text = balState.Message;
 
-        FillStateGridView();
     }
     #endregion
 
@@ -37,9 +39,16 @@ public partial class AdminPanel_State_StateList : System.Web.UI.Page
     {
         StateBAL balState = new StateBAL();
 
-        gvState.DataSource = balState.SelectAll(Convert.ToInt32(Session["UserID"].ToString()));
+        DataTable dt = new DataTable();
 
-        gvState.DataBind();
+        dt = balState.SelectAll(Convert.ToInt32(Session["UserID"].ToString()));
+
+        if (dt != null && dt.Rows.Count > 0)
+        {
+            gvState.DataSource = dt;
+            gvState.DataBind();
+
+        }
     }
     #endregion
 }

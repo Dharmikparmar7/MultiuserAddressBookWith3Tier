@@ -40,14 +40,22 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
         entCity = balCity.SelectByPK(Convert.ToInt32(EncryptDecrypt.Base64Decode(Page.RouteData.Values["CityID"].ToString())));
 
-        txtCityName.Text = entCity.CityName.ToString();
-        txtPincode.Text = entCity.Pincode.ToString();
-        txtSTDCode.Text = entCity.StateID.ToString();
-        ddlStateID.SelectedValue = entCity.StateID.ToString();
+        if (!entCity.CityName.IsNull)
+            txtCityName.Text = entCity.CityName.ToString();
+
+        if (!entCity.Pincode.IsNull)
+            txtPincode.Text = entCity.Pincode.ToString();
+
+        if (!entCity.STDCode.IsNull)
+            txtSTDCode.Text = entCity.StateID.ToString();
+
+        if (!entCity.StateID.IsNull)
+            ddlStateID.SelectedValue = entCity.StateID.ToString();
 
         entState = balState.SelectByPK(entCity.StateID);
 
-        ddlCountryID.SelectedValue = entState.CountryID.ToString();
+        if (!entState.CountryID.IsNull)
+            ddlCountryID.SelectedValue = entState.CountryID.ToString();
 
         CommonFillDropdown.FillStateDropdown(Convert.ToInt32(Session["UserID"]), ddlStateID, lblMessage, Convert.ToInt32((ddlCountryID.SelectedValue)));
     }
@@ -98,24 +106,35 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
         {
             entCity.CityID = Convert.ToInt32(EncryptDecrypt.Base64Decode(Page.RouteData.Values["CityID"].ToString()));
 
-            balCity.Update(entCity);
+            if (balCity.Update(entCity))
+            {
+                lblMessage.Text = "Updated Successfully!";
+                Response.Redirect("~/AddressBook/AdminPanel/City/Display");
+            }
+            else
+            {
+                lblMessage.Text = balCity.Message;
+            }
 
-            Response.Redirect("~/AddressBook/AdminPanel/City/Display");
         }
         else
         {
             entCity.UserID = Convert.ToInt32(Session["UserID"].ToString());
 
-            balCity.Insert(entCity);
+            if (balCity.Insert(entCity))
+            {
+                lblMessage.Text = "Data Inserted Successfully";
+                txtCityName.Text = "";
+                txtPincode.Text = "";
+                txtSTDCode.Text = "";
 
-            lblMessage.Text = "Data Inserted Successfully";
-            txtCityName.Text = "";
-            txtPincode.Text = "";
-            txtSTDCode.Text = "";
+                ddlCountryID.SelectedIndex = 0;
+                ddlStateID.Items.Clear();
+                ddlStateID.Items.Insert(0, new ListItem("Select State", "-1"));
+            }
+            else
+                lblMessage.Text = balCity.Message;
 
-            ddlCountryID.SelectedIndex = 0;
-            ddlStateID.Items.Clear();
-            ddlStateID.Items.Insert(0, new ListItem("Select State", "-1"));
         }
     }
     #endregion

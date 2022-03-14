@@ -234,6 +234,56 @@ public class ContactDAL : DatabaseConfig
     }
     #endregion
 
+    #region SelectForCheckBoxList
+    public DataTable SelectForCheckBoxList(SqlInt32 ContactID)
+    {
+        using (SqlConnection objConn = new SqlConnection(ConnectionString))
+        {
+            objConn.Open();
+
+            using (SqlCommand objCmd = objConn.CreateCommand())
+            {
+                try
+                {
+                    #region Prepare Command
+
+                    objCmd.CommandType = CommandType.StoredProcedure;
+                    objCmd.CommandText = "PR_Contact_SelectItemsCheckboxListByUserID";
+
+                    objCmd.Parameters.AddWithValue("@ContactID", ContactID);
+                    #endregion
+
+                    #region Read Data and return DataTable
+                    DataTable dt = new DataTable();
+
+                    using (SqlDataReader objSDR = objCmd.ExecuteReader())
+                    {
+                        dt.Load(objSDR);
+                    }
+
+                    return dt;
+                    #endregion
+                }
+                catch (SqlException sqlex)
+                {
+                    Message = sqlex.InnerException.Message;
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    Message = ex.InnerException.Message;
+                    return null;
+                }
+                finally
+                {
+                    if (objConn.State == ConnectionState.Open)
+                        objConn.Close();
+                }
+            }
+        }
+    }
+    #endregion
+
     #region SelectByPK
     public ContactENT SelectByPK(SqlInt32 ContactID)
     {

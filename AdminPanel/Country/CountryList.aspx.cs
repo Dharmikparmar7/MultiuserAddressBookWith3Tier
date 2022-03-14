@@ -24,9 +24,10 @@ public partial class AdminPanel_Country_CountryList : System.Web.UI.Page
     {
         CountryBAL balCountry = new CountryBAL();
 
-        balCountry.Delete(Convert.ToInt32(e.CommandArgument.ToString()));
-
-        FillCountryGridView();
+        if(balCountry.Delete(Convert.ToInt32(e.CommandArgument.ToString())))    
+            FillCountryGridView();
+        else
+            lblMessage.Text = balCountry.Message;
     }
     #endregion
 
@@ -36,9 +37,15 @@ public partial class AdminPanel_Country_CountryList : System.Web.UI.Page
     {
         CountryBAL balCountry = new CountryBAL();
 
-        gvCountry.DataSource = balCountry.SelectAll(Convert.ToInt32(Session["UserID"].ToString()));
+        DataTable dt = new DataTable();
 
-        gvCountry.DataBind();
+        dt = balCountry.SelectAll(Convert.ToInt32(Session["UserID"].ToString()));
+
+        if (dt != null && dt.Rows.Count > 0)
+        {
+            gvCountry.DataSource = dt;
+            gvCountry.DataBind();
+        }
     }
     #endregion
 }

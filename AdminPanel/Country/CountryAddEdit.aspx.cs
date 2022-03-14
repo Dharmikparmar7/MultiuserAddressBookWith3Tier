@@ -34,9 +34,11 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
 
         entCountry = balCountry.SelectByPK(Convert.ToInt32(EncryptDecrypt.Base64Decode(Page.RouteData.Values["CountryID"].ToString())));
 
-        txtCountryName.Text = entCountry.CountryName.ToString();
+        if (!entCountry.CountryName.IsNull)
+            txtCountryName.Text = entCountry.CountryName.ToString();
 
-        txtCountryCode.Text = entCountry.CountryCode.ToString();
+        if (!entCountry.CountryCode.IsNull)
+            txtCountryCode.Text = entCountry.CountryCode.ToString();
     }
     #endregion
 
@@ -77,20 +79,26 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
         {
             entCountry.CountryID = Convert.ToInt32(EncryptDecrypt.Base64Decode(Page.RouteData.Values["CountryID"].ToString()));
 
-            balCountry.Update(entCountry);
+            if (balCountry.Update(entCountry))
+                Response.Redirect("~/AddressBook/AdminPanel/Country/Display");
+            else
+                lblMessage.Text = balCountry.Message;
 
-            Response.Redirect("~/AddressBook/AdminPanel/Country/Display");
         }
         else
         {
             entCountry.UserID = Convert.ToInt32(Session["UserID"].ToString());
 
-            balCountry.Insert(entCountry);
+            if (balCountry.Insert(entCountry))
+            {
+                lblMessage.Text = "Data Inserted Successfully";
 
-            lblMessage.Text = "Data Inserted Successfully";
+                txtCountryCode.Text = "";
+                txtCountryName.Text = "";
+            }
+            else
+                lblMessage.Text = balCountry.Message;
 
-            txtCountryCode.Text = "";
-            txtCountryName.Text = "";
         }
     }
     #endregion

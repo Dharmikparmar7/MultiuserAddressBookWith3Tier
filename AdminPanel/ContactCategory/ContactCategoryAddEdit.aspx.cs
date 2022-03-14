@@ -34,7 +34,8 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
 
         entContactCategory = balContactCategory.SelectByPK(Convert.ToInt32(EncryptDecrypt.Base64Decode(Page.RouteData.Values["ContactCategoryID"].ToString())));
 
-        txtCCName.Text = entContactCategory.ContactCategoryName.ToString();
+        if (!entContactCategory.ContactCategoryName.IsNull)
+            txtCCName.Text = entContactCategory.ContactCategoryName.ToString();
     }
     #endregion
 
@@ -70,20 +71,27 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
         {
             entContactCategory.ContactCategoryID = Convert.ToInt32(EncryptDecrypt.Base64Decode(Page.RouteData.Values["ContactCategoryID"].ToString()));
 
-            balContactCategory.Update(entContactCategory);
+            if (balContactCategory.Update(entContactCategory))
+            {
+                Response.Redirect("~/AddressBook/AdminPanel/ContactCategory/Display");
+            }
+            else
+                lblMessage.Text = balContactCategory.Message;
 
-            Response.Redirect("~/AddressBook/AdminPanel/ContactCategory/Display");
         }
         else
         {
             if (Session["UserID"] != null)
                 entContactCategory.UserID = Convert.ToInt32(Session["UserID"].ToString());
 
-            balContactCategory.Insert(entContactCategory);
+            if (balContactCategory.Insert(entContactCategory))
+            {
+                lblMessage.Text = "Data Inserted Successfully";
 
-            lblMessage.Text = "Data Inserted Successfully";
-
-            txtCCName.Text = "";
+                txtCCName.Text = "";
+            }
+            else
+                lblMessage.Text = balContactCategory.Message;
         }
     }
     #endregion

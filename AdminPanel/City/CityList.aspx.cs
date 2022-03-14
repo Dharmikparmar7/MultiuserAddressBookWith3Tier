@@ -18,13 +18,19 @@ public partial class AdminPanel_City_CityList : System.Web.UI.Page
                 FillCityGridView();
         }
     }
-    
+
     #region Delete City
     protected void gvCity_RowCommand(object sender, GridViewCommandEventArgs e)
     {
-        CityBAL balCity = new CityBAL();
+        #region Handle Delete Action from GridView
 
-        balCity.Delete(Convert.ToInt32(e.CommandArgument.ToString()));
+        if (e.CommandName == "DeleteRecord" && e.CommandArgument != null)
+        {
+            CityBAL balCity = new CityBAL();
+            balCity.Delete(Convert.ToInt32(e.CommandArgument.ToString()));
+        }
+
+        #endregion Handle Delete Action from GridView
 
         FillCityGridView();
     }
@@ -35,9 +41,16 @@ public partial class AdminPanel_City_CityList : System.Web.UI.Page
     {
         CityBAL balCity = new CityBAL();
 
-        gvCity.DataSource = balCity.SelectAll(Convert.ToInt32(Session["UserID"]));
+        DataTable dtCity = new DataTable();
 
-        gvCity.DataBind();
+        dtCity = balCity.SelectAll(Convert.ToInt32(Session["UserID"]));
+
+        if (dtCity != null && dtCity.Rows.Count > 0)
+        {
+            gvCity.DataSource = dtCity;
+
+            gvCity.DataBind();
+        }
     }
     #endregion
 }
